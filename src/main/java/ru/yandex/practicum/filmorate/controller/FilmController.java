@@ -8,12 +8,14 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/films")
 public class FilmController {
     private final Map<Integer, Film> films = new HashMap<>();
-
+    private final static Logger log = LoggerFactory.getLogger(FilmController.class);
     @GetMapping
     public Collection<Film> findAll() {
         return films.values();
