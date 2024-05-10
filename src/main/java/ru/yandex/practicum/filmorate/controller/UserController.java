@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
+@RequestMapping("/users")
 public class UserController {
     private final Map<Integer, User> users = new HashMap<>();
 
@@ -63,7 +64,7 @@ public class UserController {
                 .stream()
                 .mapToInt(id -> id)
                 .max()
-                .orElse(100000);
+                .orElse(0);
         return ++currentMaxId;
     }
 }

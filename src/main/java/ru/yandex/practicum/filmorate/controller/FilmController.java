@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
+@RequestMapping("/films")
 public class FilmController {
     private final Map<Integer, Film> films = new HashMap<>();
 
@@ -53,7 +54,7 @@ public class FilmController {
         if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
             throw new ValidationException("В это время еще не было кинематографа");
         }
-        if (film.getDuration().getMinutes() <= 0) {
+        if (film.getDuration() <= 0) {
             throw new ValidationException("Продолжительность фильма должна быть больше нуля");
         }
     }
