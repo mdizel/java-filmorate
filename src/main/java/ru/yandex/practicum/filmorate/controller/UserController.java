@@ -15,7 +15,7 @@ import java.util.Map;
 @RequestMapping("/users")
 public class UserController {
     private final Map<Integer, User> users = new HashMap<>();
-    private final static Logger log = LoggerFactory.getLogger("FilmController");
+    private static final Logger log = LoggerFactory.getLogger("FilmController");
 
     @GetMapping
     public Collection<User> findAll() {
@@ -61,7 +61,7 @@ public class UserController {
             throw new ValidationException("Логин не указан или содержит пробелы");
         }
         if (user.getName() == null || user.getName().isBlank()) {
-            log.info("Имя ползователя не указано");
+            log.info("Имя пользователя не указано");
             user.setName(user.getLogin());
         }
         if (user.getBirthday().isAfter(LocalDate.now())) {

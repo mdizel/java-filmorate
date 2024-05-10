@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -15,15 +16,16 @@ import org.slf4j.LoggerFactory;
 @RequestMapping("/films")
 public class FilmController {
     private final Map<Integer, Film> films = new HashMap<>();
-    private final static Logger log = LoggerFactory.getLogger("FilmController");
+    private static final Logger log = LoggerFactory.getLogger("FilmController");
 
     @GetMapping
     public Collection<Film> findAll() {
         return films.values();
     }
 
+
     @PostMapping
-    public Film create(@RequestBody Film film) {
+    public Film create(@RequestBody @Valid Film film) {
         checkRules(film);
         film.setId(getNextId());
         films.put(film.getId(), film);

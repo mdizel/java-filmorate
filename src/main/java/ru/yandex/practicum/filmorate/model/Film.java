@@ -6,9 +6,6 @@ import lombok.ToString;
 
 import java.time.LocalDate;
 
-/**
- * Film.
- */
 
 @Getter
 @Setter
