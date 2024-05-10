@@ -1,11 +1,9 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import javax.xml.datatype.Duration;
 import java.time.LocalDate;
 
 /**
