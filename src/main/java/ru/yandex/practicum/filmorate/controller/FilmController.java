@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -9,8 +10,6 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/films")
@@ -25,7 +24,7 @@ public class FilmController {
 
 
     @PostMapping
-    public Film create(@RequestBody @Valid Film film) {
+    public Film create(@RequestBody Film film) {
         checkRules(film);
         film.setId(getNextId());
         films.put(film.getId(), film);
@@ -36,7 +35,7 @@ public class FilmController {
     @PutMapping
     public Film update(@RequestBody Film newFilm) {
         if (newFilm.getId() == null) {
-            log.warn("Не указан Id");
+            log.error("Не указан Id");
             throw new ValidationException("Id должен быть указан");
         }
         if (films.containsKey(newFilm.getId())) {
@@ -49,25 +48,25 @@ public class FilmController {
             log.info("Пользователь изменил данные фильма в Id {}", oldFilm.getId());
             return oldFilm;
         }
-        log.warn("Фильм с id {} не найден", newFilm.getId());
+        log.error("Фильм с id {} не найден", newFilm.getId());
         throw new ValidationException("Фильм с id = " + newFilm.getId() + " не найден");
     }
 
     public void checkRules(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
-            log.warn("Не указано наименование фильма");
+            log.error("Не указано наименование фильма");
             throw new ValidationException("Наименование не может быть пустым");
         }
         if (film.getDescription().length() > 200) {
-            log.warn("Описание более 200 символов");
+            log.error("Описание более 200 символов");
             throw new ValidationException("Описание не может быть более 200 символов");
         }
         if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            log.warn("Некоректная дата релиза");
+            log.error("Некоректная дата релиза");
             throw new ValidationException("В это время еще не было кинематографа");
         }
         if (film.getDuration() <= 0) {
-            log.warn("Некоректная продолжительность фильма");
+            log.error("Некоректная продолжительность фильма");
             throw new ValidationException("Продолжительность фильма должна быть больше нуля");
         }
     }
