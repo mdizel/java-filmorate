@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -65,7 +66,7 @@ public class UserService {
         }
         if (!users.containsKey(friendId)) {
             throw new ValidationException(String.format("Пользователь № %s найден и не может быть добавлен в друзья",
-                    id));
+                    friendId));
         }
         users.get(id).getFriends().add(friendId);
         users.get(friendId).getFriends().add(id);
@@ -83,7 +84,24 @@ public class UserService {
         friends.remove(friendId);
     }
 
+    public List<String> getFriends(Integer userId){
+        if (!users.containsKey(userId)) {
+            throw new ValidationException(String.format("Пользователь № %s не найден", userId));
+        }
+       return users.get(userId).getFriends().stream()
+                .map(friendId -> String.format("%s %s", friendId,users.get(friendId).getName()))
+                        .collect(Collectors.toList());
+
+    }
+
     public List<String> getCommonFriends(Integer userId1, Integer userId2) {
+        if (!users.containsKey(userId1)) {
+            throw new ValidationException(String.format("Пользователь № %s не найден", userId1));
+        }
+        if (!users.containsKey(userId2)) {
+            throw new ValidationException(String.format("Пользователь № %s найден и не может быть добавлен в друзья",
+                    userId2));
+        }
         List<String> commonFriends = new ArrayList<>();
         for (Integer id1 : users.get(userId1).getFriends()) {
             for (Integer id2 : users.get(userId2).getFriends()) {
