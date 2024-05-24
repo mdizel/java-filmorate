@@ -8,6 +8,8 @@ import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.time.LocalDate;
 
@@ -17,11 +19,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class FilmorateApplicationTests {
     FilmController filmController;
     UserController userController;
+    FilmService filmService;
+    UserService userService;
 
     @BeforeEach
     void createControllers() {
-        filmController = new FilmController();
-        userController = new UserController();
+        filmController = new FilmController(filmService);
+        userController = new UserController(userService);
     }
 
     @Test
