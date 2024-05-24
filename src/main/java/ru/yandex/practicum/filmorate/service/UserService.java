@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -50,22 +51,22 @@ public class UserService {
             return oldUser;
         }
         log.error("Пользователь с Id {} не найден", newUser.getId());
-        throw new ValidationException("Пользователь с id = " + newUser.getId() + " не найден");
+        throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
     }
 
     public User getById(Integer id) {
         if (users.containsKey(id)) {
             return users.get(id);
         }
-        throw new ValidationException(String.format("Пользователь № %s не найден", id));
+        throw new NotFoundException(String.format("Пользователь № %s не найден", id));
     }
 
     public User addFriend(Integer id, Integer friendId) {
         if (!users.containsKey(id)) {
-            throw new ValidationException(String.format("Пользователь № %s не найден", id));
+            throw new NotFoundException(String.format("Пользователь № %s не найден", id));
         }
         if (!users.containsKey(friendId)) {
-            throw new ValidationException(String.format("Пользователь № %s найден и не может быть добавлен в друзья",
+            throw new NotFoundException(String.format("Пользователь № %s не найден и не может быть добавлен в друзья",
                     friendId));
         }
         users.get(id).getFriends().add(friendId);
@@ -75,18 +76,18 @@ public class UserService {
 
     public void removeFriend(Integer id, Integer friendId) {
         if (!users.containsKey(id)) {
-            throw new ValidationException(String.format("Пользователь № %s не найден", id));
+            throw new NotFoundException(String.format("Пользователь № %s не найден", id));
         }
         Set<Integer> friends = users.get(id).getFriends();
         if (!friends.contains(friendId)) {
-            throw new ValidationException(String.format("Пользователь c ID %s не найден в списке друзей", friendId));
+            throw new NotFoundException(String.format("Пользователь c ID %s не найден в списке друзей", friendId));
         }
         friends.remove(friendId);
     }
 
-    public List<String> getFriends(Integer userId){
+    public List<String> getFriends(Integer userId) {
         if (!users.containsKey(userId)) {
-            throw new ValidationException(String.format("Пользователь № %s не найден", userId));
+            throw new NotFoundException(String.format("Пользователь № %s не найден", userId));
         }
        return users.get(userId).getFriends().stream()
                 .map(friendId -> String.format("%s %s", friendId,users.get(friendId).getName()))
@@ -96,16 +97,16 @@ public class UserService {
 
     public List<String> getCommonFriends(Integer userId1, Integer userId2) {
         if (!users.containsKey(userId1)) {
-            throw new ValidationException(String.format("Пользователь № %s не найден", userId1));
+            throw new NotFoundException(String.format("Пользователь № %s не найден", userId1));
         }
         if (!users.containsKey(userId2)) {
-            throw new ValidationException(String.format("Пользователь № %s найден и не может быть добавлен в друзья",
+            throw new NotFoundException(String.format("Пользователь № %s найден и не может быть добавлен в друзья",
                     userId2));
         }
         List<String> commonFriends = new ArrayList<>();
         for (Integer id1 : users.get(userId1).getFriends()) {
             for (Integer id2 : users.get(userId2).getFriends()) {
-                if (id1 == id2) {
+                if (id1.equals(id2)) {
                     String friend = String.format("%s %s", id2, users.get(userId2).getName());
                     commonFriends.add(friend);
                 }

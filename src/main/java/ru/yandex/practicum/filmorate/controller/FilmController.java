@@ -6,10 +6,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -39,7 +41,23 @@ public class FilmController {
 
 
     @GetMapping("/{id}")
-    public Film getUserById(@PathVariable Long id) {
+    public Film getUserById(@PathVariable Integer id) {
         return filmService.getById(id);
     }
+
+    @PutMapping("/{id}/like/{userId}")
+    public Film addLike(@PathVariable Integer id, @PathVariable Integer userId) {
+        return filmService.addLike(id, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public void removeFriend(@PathVariable Integer id, @PathVariable Integer userId){
+        filmService.removeLike(id, userId);
+    }
+
+    @GetMapping("/popular?count={count}")
+    public List<Film> getFriends(@RequestParam(defaultValue = "10") Integer count) {
+        return filmService.getTopFilms(count);
+    }
+
 }
