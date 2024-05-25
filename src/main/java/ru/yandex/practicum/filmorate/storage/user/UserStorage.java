@@ -7,3 +7,4 @@ import java.util.Map;
 public interface UserStorage {
     public Map<Integer, User> getUsers();
 }
+

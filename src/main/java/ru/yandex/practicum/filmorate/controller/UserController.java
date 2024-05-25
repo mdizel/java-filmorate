@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.RequiredArgsConstructor;
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
@@ -11,9 +11,9 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/users")
-@RequiredArgsConstructor
 public class UserController {
-    private final UserService userService;
+    @Getter
+    private final UserService userService = new UserService();
 
     @GetMapping
     public Collection<User> findAll() {
@@ -47,12 +47,12 @@ public class UserController {
     }
 
     @GetMapping("/{id}/friends")
-    public List<String> getFriends(@PathVariable Integer id) {
+    public List<User> getFriends(@PathVariable Integer id) {
         return userService.getFriends(id);
     }
 
     @GetMapping("{id}/friends/common/{otherId}")
-    public List<String> getCommonFriends(@PathVariable Integer id, @PathVariable Integer otherId) {
+    public List<User> getCommonFriends(@PathVariable Integer id, @PathVariable Integer otherId) {
         return userService.getCommonFriends(id, otherId);
     }
 

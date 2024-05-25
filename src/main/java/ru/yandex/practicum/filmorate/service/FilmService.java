@@ -1,13 +1,17 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -17,10 +21,15 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class FilmService {
     private static final Logger log = LoggerFactory.getLogger("FilmController");
     private final FilmStorage memFilmStorage = new InMemoryFilmStorage();
     private final Map<Integer, Film> films = memFilmStorage.getFilms();
+    private final UserController userController = new UserController();
+    private final UserService userService = userController.getUserService();
+    UserStorage userStorage = userService.getMemUserStorage();
+    private final Map<Integer, User> users = userStorage.getUsers();
 
     public Collection<Film> findAll() {
         return films.values();
@@ -66,6 +75,10 @@ public class FilmService {
         if (!films.containsKey(filmId)) {
             log.error("Фильм с id {} не найден", filmId);
             throw new NotFoundException(String.format("Фильм с id %s не найден", filmId));
+        }
+        if (!users.containsKey(userId)) {
+            log.error("Пользователь с id {} не найден", userId);
+            throw new NotFoundException(String.format("Пользователь с id %s не найден", userId));
         }
         Set<Integer> likes = films.get(filmId).getLikes();
         likes.add(userId);

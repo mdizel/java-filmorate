@@ -10,7 +10,7 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 public class InMemoryUserStorage implements UserStorage {
-    private Map<Integer, User> users = new HashMap<>();
+    private static Map<Integer, User> users = new HashMap<>();
 
     @Override
     public Map<Integer, User> getUsers() {

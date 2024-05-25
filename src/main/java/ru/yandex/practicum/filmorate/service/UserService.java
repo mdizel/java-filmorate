@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private static final Logger log = LoggerFactory.getLogger("UserController");
+    @Getter
     private final UserStorage memUserStorage = new InMemoryUserStorage();
     @Getter
     private final Map<Integer, User> users = memUserStorage.getUsers();
@@ -102,18 +103,18 @@ public class UserService {
         users.get(friendId).setFriends(fFriends);
     }
 
-    public List<String> getFriends(Integer userId) {
+    public List<User> getFriends(Integer userId) {
         if (!users.containsKey(userId)) {
             log.error("Друг с Id {} не найден", userId);
             throw new NotFoundException(String.format("Пользователь № %s не найден", userId));
         }
         log.info("Получен список друзей пользователя {}", userId);
         return users.get(userId).getFriends().stream()
-                .map(friendId -> String.format("%s %s", friendId, users.get(friendId).getName()))
+                .map(friendId -> users.get(friendId))
                 .collect(Collectors.toList());
     }
 
-    public List<String> getCommonFriends(Integer userId1, Integer userId2) {
+    public List<User> getCommonFriends(Integer userId1, Integer userId2) {
         if (!users.containsKey(userId1)) {
             log.error("Пользователь с Id {} не найден", userId1);
             throw new NotFoundException(String.format("Пользователь № %s не найден", userId1));
@@ -122,12 +123,11 @@ public class UserService {
             log.error("Пользователь2 с Id {} не найден", userId2);
             throw new NotFoundException(String.format("Пользователь2 № %s не найден", userId2));
         }
-        List<String> commonFriends = new ArrayList<>();
+        List<User> commonFriends = new ArrayList<>();
         for (Integer id1 : users.get(userId1).getFriends()) {
             for (Integer id2 : users.get(userId2).getFriends()) {
                 if (id1.equals(id2)) {
-                    String friend = String.format("%s %s", id2, users.get(userId2).getName());
-                    commonFriends.add(friend);
+                    commonFriends.add(users.get(userId2));
                 }
             }
         }
