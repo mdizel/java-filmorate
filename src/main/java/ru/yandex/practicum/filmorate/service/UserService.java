@@ -95,10 +95,10 @@ public class UserService {
             throw new NotFoundException(String.format("Пользователь № %s не найден", id));
         }
         Set<Integer> friends = users.get(id).getFriends();
-       /* if (!friends.contains(friendId)) {
+        if (!friends.isEmpty() && !friends.contains(friendId)) {
             log.error("Друг с Id {} не найден", friendId);
             throw new NotFoundException(String.format("Пользователь c ID %s не найден в списке друзей", friendId));
-        }*/
+        }
         friends.remove(friendId);
         users.get(id).setFriends(friends);
         Set<Integer> fFriends = users.get(friendId).getFriends();
@@ -130,7 +130,7 @@ public class UserService {
         List<User> commonFriends = new ArrayList<>();
         for (Integer id1 : users.get(userId1).getFriends()) {
             for (Integer id2 : users.get(userId2).getFriends()) {
-                if (id1.equals(id2)) {
+                if (id1.equals(id2) && !id1.equals(userId2)) {
                     commonFriends.add(users.get(userId2));
                 }
             }
