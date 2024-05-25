@@ -95,10 +95,10 @@ public class UserService {
             throw new NotFoundException(String.format("Пользователь № %s не найден", id));
         }
         Set<Integer> friends = users.get(id).getFriends();
-        if (!friends.contains(friendId)) {
+       /* if (!friends.contains(friendId)) {
             log.error("Друг с Id {} не найден", friendId);
             throw new NotFoundException(String.format("Пользователь c ID %s не найден в списке друзей", friendId));
-        }
+        }*/
         friends.remove(friendId);
         users.get(id).setFriends(friends);
         Set<Integer> fFriends = users.get(friendId).getFriends();
