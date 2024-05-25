@@ -75,6 +75,10 @@ public class UserService {
             throw new NotFoundException(String.format("Пользователь № %s не найден и не может быть добавлен в друзья",
                     friendId));
         }
+        if (id.equals(friendId)) {
+            log.error("Друг с Id {} не найден", friendId);
+            throw new ValidationException("Нельзя добавить самого себя в друзья");
+        }
         Set<Integer> friends = users.get(id).getFriends();
         friends.add(friendId);
         users.get(id).setFriends(friends);
