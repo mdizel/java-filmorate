@@ -131,7 +131,7 @@ public class UserService {
         for (Integer id1 : users.get(userId1).getFriends()) {
             for (Integer id2 : users.get(userId2).getFriends()) {
                 if (id1.equals(id2) && !id1.equals(userId2)) {
-                    commonFriends.add(users.get(userId2));
+                    commonFriends.add(users.get(id1));
                 }
             }
         }
