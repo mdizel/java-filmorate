@@ -24,6 +24,8 @@ class FilmorateApplicationTests {
 
     @BeforeEach
     void createControllers() {
+        filmService = new FilmService();
+        userService = new UserService();
         filmController = new FilmController(filmService);
         userController = new UserController(userService);
     }

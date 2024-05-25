@@ -1,34 +1,28 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class FilmService {
-
     private static final Logger log = LoggerFactory.getLogger("FilmController");
-    private final FilmStorage memFilmStorage;
-    private final UserStorage memUserStorage;
+    private final FilmStorage memFilmStorage = new InMemoryFilmStorage();
     private final Map<Integer, Film> films = memFilmStorage.getFilms();
-    private final Map<Integer, User> users = memUserStorage.getUsers();
-      public Collection<Film> findAll() {
+
+    public Collection<Film> findAll() {
         return films.values();
     }
 
@@ -36,18 +30,20 @@ public class FilmService {
         checkRules(film);
         film.setId(getNextId());
         films.put(film.getId(), film);
-        log.info("Пользователь выбрал {}", film.getName());
+        log.info("Пользователь добавил {}", film.getName());
         return film;
     }
 
     public Film getById(Integer id) {
         if (films.containsKey(id)) {
+            log.info("Пользователь выбрал фильм {}", films.get(id).getName());
             return films.get(id);
         }
+        log.error("Фильм Id {} не найден",id);
         throw new NotFoundException(String.format("Фильм Id № %s не найден", id));
     }
 
-        public Film update(Film newFilm) {
+    public Film update(Film newFilm) {
         if (newFilm.getId() == null) {
             log.error("Не указан Id");
             throw new ValidationException("Id должен быть указан");
@@ -68,38 +64,44 @@ public class FilmService {
 
     public Film addLike(Integer filmId, Integer userId) {
         if (!films.containsKey(filmId)) {
+            log.error("Фильм с id {} не найден", filmId);
             throw new NotFoundException(String.format("Фильм с id %s не найден", filmId));
         }
-        if (!users.containsKey(userId)) {
-            throw new NotFoundException(String.format("Пользователь с id %s не найден",
-                    userId));
-        }
-        films.get(filmId).getLikes().add(userId);
+        Set<Integer> likes = films.get(filmId).getLikes();
+        likes.add(userId);
+        films.get(filmId).setLikes(likes);
+        log.info("Добавлен лайк к фильму с id {}", filmId);
         return films.get(filmId);
     }
 
-    public void removeLike(Integer userId, Integer filmId) {
+    public void removeLike(Integer filmId, Integer userId) {
         if (!films.containsKey(filmId)) {
+            log.error("Фильм с id {} не найден", filmId);
             throw new NotFoundException(String.format("Фильм с Id %s не найден", filmId));
         }
         Set<Integer> likes = films.get(filmId).getLikes();
         if (!likes.contains(userId)) {
+            log.error("Неверный id {} пользователя", userId);
             throw new NotFoundException(String.format("Пользователь c ID %s не оценивал этот фильм", userId));
         }
         likes.remove(userId);
+        log.info("Удален лайк к фильму с id {}", filmId);
+        films.get(filmId).setLikes(likes);
     }
 
     public List<Film> getTopFilms(int count) {
-          if (count < 0) {
-              throw new ValidationException("Некорректное значение count");
-          }
-          if (count > films.size()) {
-              count = films.size();
-          }
-          return films.values().stream()
-                .sorted((film1, film2)-> film2.getLikes().size() - film1.getLikes().size())
-                  .limit(count)
-                  .collect(Collectors.toList());
+        if (count < 0) {
+            log.error("Некорректное количество {}", count);
+            throw new ValidationException("Некорректное значение count");
+        }
+        if (count > films.size()) {
+            count = films.size();
+        }
+        log.info("Подборка {} популярных фильмов", count);
+        return films.values().stream()
+                .sorted((film1, film2) -> film2.getLikes().size() - film1.getLikes().size())
+                .limit(count)
+                .collect(Collectors.toList());
     }
 
     public void checkRules(Film film) {

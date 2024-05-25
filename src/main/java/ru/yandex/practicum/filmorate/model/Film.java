@@ -19,6 +19,7 @@ public class Film {
     private LocalDate releaseDate;
     private Integer duration;
     Set<Integer> likes = new HashSet<>();
+
     public Film(Integer id, String name, String description, LocalDate releaseDate, Integer duration) {
         this.id = id;
         this.name = name;
