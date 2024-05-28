@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -18,12 +19,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserService {
-
     private static final Logger log = LoggerFactory.getLogger("UserController");
-    @Getter
-    private final UserStorage memUserStorage = new InMemoryUserStorage();
-    @Getter
-    private final Map<Integer, User> users = memUserStorage.getUsers();
+    private final UserStorage inMemoryUserStorage;
+    private final Map<Integer, User> users = inMemoryUserStorage.getUsers();
 
     public Collection<User> findAll() {
         return users.values();
@@ -66,10 +64,7 @@ public class UserService {
     }
 
     public User addFriend(Integer id, Integer friendId) {
-        if (!users.containsKey(id)) {
-            log.error("Пользователь с Id {} не найден", id);
-            throw new NotFoundException(String.format("Пользователь № %s не найден", id));
-        }
+        checkUserId(id);
         if (!users.containsKey(friendId)) {
             log.error("Друг с Id {} не найден", friendId);
             throw new NotFoundException(String.format("Пользователь № %s не найден и не может быть добавлен в друзья",
@@ -81,19 +76,16 @@ public class UserService {
         }
         Set<Integer> friends = users.get(id).getFriends();
         friends.add(friendId);
-        users.get(id).setFriends(friends);
+        //users.get(id).setFriends(friends);
         Set<Integer> fFriends = users.get(friendId).getFriends();
         fFriends.add(id);
-        users.get(friendId).setFriends(fFriends);
+       // users.get(friendId).setFriends(fFriends);
         log.info("Друг с Id {} добавлен", friendId);
         return users.get(id);
     }
 
     public void removeFriend(Integer id, Integer friendId) {
-        if (!users.containsKey(id)) {
-            log.error("Пользователь с Id {} не найден", id);
-            throw new NotFoundException(String.format("Пользователь № %s не найден", id));
-        }
+        checkUserId(id);
         Set<Integer> friends = users.get(id).getFriends();
         if (!friends.isEmpty() && !friends.contains(friendId)) {
             log.error("Друг с Id {} не найден", friendId);
@@ -104,14 +96,10 @@ public class UserService {
         Set<Integer> fFriends = users.get(friendId).getFriends();
         log.info("Пользователь с Id {} удален из друзей", friendId);
         fFriends.remove(id);
-        users.get(friendId).setFriends(fFriends);
     }
 
     public List<User> getFriends(Integer userId) {
-        if (!users.containsKey(userId)) {
-            log.error("Друг с Id {} не найден", userId);
-            throw new NotFoundException(String.format("Пользователь № %s не найден", userId));
-        }
+        checkUserId(userId);
         log.info("Получен список друзей пользователя {}", userId);
         return users.get(userId).getFriends().stream()
                 .map(friendId -> users.get(friendId))
@@ -119,14 +107,8 @@ public class UserService {
     }
 
     public List<User> getCommonFriends(Integer userId1, Integer userId2) {
-        if (!users.containsKey(userId1)) {
-            log.error("Пользователь с Id {} не найден", userId1);
-            throw new NotFoundException(String.format("Пользователь № %s не найден", userId1));
-        }
-        if (!users.containsKey(userId2)) {
-            log.error("Пользователь2 с Id {} не найден", userId2);
-            throw new NotFoundException(String.format("Пользователь2 № %s не найден", userId2));
-        }
+        checkUserId(userId1);
+        checkUserId(userId2);
         List<User> commonFriends = new ArrayList<>();
         for (Integer id1 : users.get(userId1).getFriends()) {
             for (Integer id2 : users.get(userId2).getFriends()) {
@@ -137,6 +119,13 @@ public class UserService {
         }
         log.info("Получен список общих друзей пользователей {} и {}", userId1, userId2);
         return commonFriends;
+    }
+
+    public void checkUserId(Integer userId) {
+        if (!users.containsKey(userId)) {
+            log.error("Пользователь с Id {} не найден", userId);
+            throw new NotFoundException(String.format("Пользователь № %s не найден", userId));
+        }
     }
 
     public void checkRules(User user) {
