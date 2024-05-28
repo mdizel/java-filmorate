@@ -1,15 +1,12 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
@@ -21,17 +18,19 @@ import java.util.stream.Collectors;
 public class UserService {
     private static final Logger log = LoggerFactory.getLogger("UserController");
     private final UserStorage inMemoryUserStorage;
-    private final Map<Integer, User> users = inMemoryUserStorage.getUsers();
 
-    public Collection<User> findAll() {
-        return users.values();
+    private Map<Integer, User> getUsers() {
+        return inMemoryUserStorage.getUsers();
     }
 
+    public Collection<User> findAll() {
+        return getUsers().values();
+    }
 
     public User create(User user) {
         checkRules(user);
         user.setId(getNextId());
-        users.put(user.getId(), user);
+        getUsers().put(user.getId(), user);
         log.info("Зарегистрировался пользователь с логином {}", user.getLogin());
         return user;
     }
@@ -42,8 +41,8 @@ public class UserService {
             log.error("Не указан Id пользователя");
             throw new ValidationException("Id должен быть указан");
         }
-        if (users.containsKey(newUser.getId())) {
-            User oldUser = users.get(newUser.getId());
+        if (getUsers().containsKey(newUser.getId())) {
+            User oldUser = getUsers().get(newUser.getId());
             checkRules(newUser);
             oldUser.setName(newUser.getName());
             oldUser.setEmail(newUser.getEmail());
@@ -57,15 +56,15 @@ public class UserService {
     }
 
     public User getById(Integer id) {
-        if (users.containsKey(id)) {
-            return users.get(id);
+        if (getUsers().containsKey(id)) {
+            return getUsers().get(id);
         }
         throw new NotFoundException(String.format("Пользователь № %s не найден", id));
     }
 
     public User addFriend(Integer id, Integer friendId) {
         checkUserId(id);
-        if (!users.containsKey(friendId)) {
+        if (!getUsers().containsKey(friendId)) {
             log.error("Друг с Id {} не найден", friendId);
             throw new NotFoundException(String.format("Пользователь № %s не найден и не может быть добавлен в друзья",
                     friendId));
@@ -74,26 +73,24 @@ public class UserService {
             log.error("Друг с Id {} не найден", friendId);
             throw new ValidationException("Нельзя добавить самого себя в друзья");
         }
-        Set<Integer> friends = users.get(id).getFriends();
+        Set<Integer> friends = getUsers().get(id).getFriends();
         friends.add(friendId);
-        //users.get(id).setFriends(friends);
-        Set<Integer> fFriends = users.get(friendId).getFriends();
+        Set<Integer> fFriends = getUsers().get(friendId).getFriends();
         fFriends.add(id);
-       // users.get(friendId).setFriends(fFriends);
         log.info("Друг с Id {} добавлен", friendId);
-        return users.get(id);
+        return getUsers().get(id);
     }
 
     public void removeFriend(Integer id, Integer friendId) {
         checkUserId(id);
-        Set<Integer> friends = users.get(id).getFriends();
+        Set<Integer> friends = getUsers().get(id).getFriends();
         if (!friends.isEmpty() && !friends.contains(friendId)) {
             log.error("Друг с Id {} не найден", friendId);
             throw new NotFoundException(String.format("Пользователь c ID %s не найден в списке друзей", friendId));
         }
         friends.remove(friendId);
-        users.get(id).setFriends(friends);
-        Set<Integer> fFriends = users.get(friendId).getFriends();
+        getUsers().get(id).setFriends(friends);
+        Set<Integer> fFriends = getUsers().get(friendId).getFriends();
         log.info("Пользователь с Id {} удален из друзей", friendId);
         fFriends.remove(id);
     }
@@ -101,8 +98,8 @@ public class UserService {
     public List<User> getFriends(Integer userId) {
         checkUserId(userId);
         log.info("Получен список друзей пользователя {}", userId);
-        return users.get(userId).getFriends().stream()
-                .map(friendId -> users.get(friendId))
+        return getUsers().get(userId).getFriends().stream()
+                .map(friendId -> getUsers().get(friendId))
                 .collect(Collectors.toList());
     }
 
@@ -110,10 +107,10 @@ public class UserService {
         checkUserId(userId1);
         checkUserId(userId2);
         List<User> commonFriends = new ArrayList<>();
-        for (Integer id1 : users.get(userId1).getFriends()) {
-            for (Integer id2 : users.get(userId2).getFriends()) {
+        for (Integer id1 : getUsers().get(userId1).getFriends()) {
+            for (Integer id2 : getUsers().get(userId2).getFriends()) {
                 if (id1.equals(id2) && !id1.equals(userId2)) {
-                    commonFriends.add(users.get(id1));
+                    commonFriends.add(getUsers().get(id1));
                 }
             }
         }
@@ -122,7 +119,7 @@ public class UserService {
     }
 
     public void checkUserId(Integer userId) {
-        if (!users.containsKey(userId)) {
+        if (!getUsers().containsKey(userId)) {
             log.error("Пользователь с Id {} не найден", userId);
             throw new NotFoundException(String.format("Пользователь № %s не найден", userId));
         }
@@ -148,7 +145,7 @@ public class UserService {
     }
 
     private int getNextId() {
-        int currentMaxId = users.keySet()
+        int currentMaxId = getUsers().keySet()
                 .stream()
                 .mapToInt(id -> id)
                 .max()

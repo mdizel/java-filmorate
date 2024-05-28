@@ -3,15 +3,12 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
@@ -25,31 +22,31 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FilmService {
     private static final Logger log = LoggerFactory.getLogger("FilmController");
-
     private final FilmStorage inMemoryFilmStorage;
-
     private final UserStorage inMemoryUserStorage;
-    private final Map<Integer, Film> films = inMemoryFilmStorage.getFilms();
-    private final Map<Integer, User> users = inMemoryUserStorage.getUsers();
+
+    private Map<Integer, Film> getFilms() {
+        return inMemoryFilmStorage.getFilms();
+    }
 
     public Collection<Film> findAll() {
-        return films.values();
+        return getFilms().values();
     }
 
     public Film create(Film film) {
         checkRules(film);
         film.setId(getNextId());
-        films.put(film.getId(), film);
+        getFilms().put(film.getId(), film);
         log.info("Пользователь добавил {}", film.getName());
         return film;
     }
 
     public Film getById(Integer id) {
-        if (films.containsKey(id)) {
-            log.info("Пользователь выбрал фильм {}", films.get(id).getName());
-            return films.get(id);
+        if (getFilms().containsKey(id)) {
+            log.info("Пользователь выбрал фильм {}", getFilms().get(id).getName());
+            return getFilms().get(id);
         }
-        log.error("Фильм Id {} не найден",id);
+        log.error("Фильм Id {} не найден", id);
         throw new NotFoundException(String.format("Фильм Id № %s не найден", id));
     }
 
@@ -58,8 +55,8 @@ public class FilmService {
             log.error("Не указан Id");
             throw new ValidationException("Id должен быть указан");
         }
-        if (films.containsKey(newFilm.getId())) {
-            Film oldFilm = films.get(newFilm.getId());
+        if (getFilms().containsKey(newFilm.getId())) {
+            Film oldFilm = getFilms().get(newFilm.getId());
             checkRules(newFilm);
             oldFilm.setName(newFilm.getName());
             oldFilm.setDescription(newFilm.getDescription());
@@ -73,7 +70,8 @@ public class FilmService {
     }
 
     public Film addLike(Integer filmId, Integer userId) {
-        if (!films.containsKey(filmId)) {
+        Map<Integer, User> users = inMemoryUserStorage.getUsers();
+        if (!getFilms().containsKey(filmId)) {
             log.error("Фильм с id {} не найден", filmId);
             throw new NotFoundException(String.format("Фильм с id %s не найден", filmId));
         }
@@ -81,36 +79,36 @@ public class FilmService {
             log.error("Пользователь с id {} не найден", userId);
             throw new NotFoundException(String.format("Пользователь с id %s не найден", userId));
         }
-        Set<Integer> likes = films.get(filmId).getLikes();
+        Set<Integer> likes = getFilms().get(filmId).getLikes();
         likes.add(userId);
         log.info("Добавлен лайк к фильму с id {}", filmId);
-        return films.get(filmId);
+        return getFilms().get(filmId);
     }
 
     public void removeLike(Integer filmId, Integer userId) {
-        if (!films.containsKey(filmId)) {
+        if (!getFilms().containsKey(filmId)) {
             log.error("Фильм с id {} не найден", filmId);
             throw new NotFoundException(String.format("Фильм с Id %s не найден", filmId));
         }
-        Set<Integer> likes = films.get(filmId).getLikes();
+        Set<Integer> likes = getFilms().get(filmId).getLikes();
         if (!likes.contains(userId)) {
             log.error("Неверный id {} пользователя", userId);
             throw new NotFoundException(String.format("Пользователь c ID %s не оценивал этот фильм", userId));
         }
         likes.remove(userId);
         log.info("Удален лайк к фильму с id {}", filmId);
-           }
+    }
 
     public List<Film> getTopFilms(int count) {
         if (count < 0) {
             log.error("Некорректное количество {}", count);
             throw new ValidationException("Некорректное значение count");
         }
-        if (count > films.size()) {
-            count = films.size();
+        if (count > getFilms().size()) {
+            count = getFilms().size();
         }
         log.info("Подборка {} популярных фильмов", count);
-        return films.values().stream()
+        return getFilms().values().stream()
                 .sorted((film1, film2) -> film2.getLikes().size() - film1.getLikes().size())
                 .limit(count)
                 .collect(Collectors.toList());
@@ -136,7 +134,7 @@ public class FilmService {
     }
 
     private int getNextId() {
-        int currentMaxId = films.keySet()
+        int currentMaxId = getFilms().keySet()
                 .stream()
                 .mapToInt(id -> id)
                 .max()

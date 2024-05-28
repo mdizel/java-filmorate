@@ -34,9 +34,8 @@ class FilmorateApplicationTests {
         filmStorage = new InMemoryFilmStorage();
         filmService = new FilmService(filmStorage, userStorage);
         userService = new UserService(userStorage);
-        //filmController = new FilmController(filmService);
-        //userController = new UserController();
-
+        filmController = new FilmController(filmService);
+        userController = new UserController(userService);
     }
 
     @Test

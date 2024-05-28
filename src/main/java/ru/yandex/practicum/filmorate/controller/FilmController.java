@@ -14,7 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/films")
 public class FilmController {
-       private final FilmService filmService;
+    private final FilmService filmService;
 
     @GetMapping
     public Collection<Film> findAll() {
@@ -35,7 +35,7 @@ public class FilmController {
 
 
     @GetMapping("/{id}")
-    public Film getUserById(@PathVariable Integer id) {
+    public Film getFilmById(@PathVariable Integer id) {
         return filmService.getById(id);
     }
 
@@ -45,12 +45,12 @@ public class FilmController {
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public void removeFriend(@PathVariable Integer id, @PathVariable Integer userId) {
+    public void removeLike(@PathVariable Integer id, @PathVariable Integer userId) {
         filmService.removeLike(id, userId);
     }
 
     @GetMapping("/popular")
-    public List<Film> getFriends(@RequestParam(defaultValue = "10") Integer count) {
+    public List<Film> getTopFilms(@RequestParam(defaultValue = "10") Integer count) {
         return filmService.getTopFilms(count);
     }
 }
